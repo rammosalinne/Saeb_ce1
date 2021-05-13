@@ -1,0 +1,286 @@
+---
+title: "Resultados do Saeb - Análise descritiva"
+author: "Aline de Almeida Ramos - 170098249, Henrique Torres de Lima - 180121987"
+date: "12/05/2021"
+output:
+  html_document: default
+  word_document: default
+---
+# Sobre o Saeb 
+
+O Sistema de Avaliação da Educação Básica - SAEB tem como objetivo avaliar a qualidade do ensino nas escolas públicas do Brasil. Esse desempenho é medido não somente por meio da aplicação de provas de Língua Portuguesa e de Matemática como também são considerados diversos fatores em que os alunos estão inseridos. A amostra trabalhada no presente relatório corresponde ao desempenho de estudantes do nono ano do ensino fundamental das escolas públicas brasileiras no ano de 2015.
+
+```{r base, include=FALSE}
+setwd("C:/Users/amand/Desktop/Aline - CE1/microdados_saeb_2015")
+DF_9EF = read.csv2("TS_ALUNO_9EF.csv", dec=".", sep=",")
+
+head(DF_9EF)
+# DF dos alunos que fizeram a prova e responderam o questionário:
+DF_9EF2 = subset(DF_9EF, IN_PREENCHIMENTO_QUESTIONARIO == 1 & IN_PREENCHIMENTO_PROVA == 1 )
+
+#Gerando a seed aleatória.
+set.seed(8834)
+
+#Queremos um DF com aproximadamente 2000 alunos, onde cada escola pode contribuir no máximo 20 alunos para esse total.
+#A lista a baixo registra o ID de cada escola, para garantir que nÃƒÂ£o existe repetiÃƒÂ§ÃƒÂ£o
+Lista_unicos_de_escolas = unique(DF_9EF2$ID_ESCOLA)
+
+#criamos um data frame vazio onde iremos interativamente adicionar os alunos aleatorios. 
+DF_9EF3 = subset(DF_9EF2,IN_PREENCHIMENTO_QUESTIONARIO == -1) # o df apresenta todas as variaveis nulas
+
+#Escolhemos 2000 escolas aleatorias para tirar uma quantidade aleatoria de alunos delas
+Escolas_aleatorias = sample(Lista_unicos_de_escolas,size=2000,replace = FALSE)
+contador = 1
+while (nrow(DF_9EF3) <2000) {
+  
+  n_alunos = 20 #quantos alunos vamos pegar dessa escola
+  df_escola = subset(DF_9EF2,ID_ESCOLA == Escolas_aleatorias[contador])
+  if (n_alunos> nrow(df_escola)) {
+    n_alunos = nrow(df_escola)
+  }
+  
+  DF_9EF3 = rbind(DF_9EF3,df_escola[1:n_alunos,])
+  
+  
+  contador = contador + 1
+}
+
+```
+
+## Contextualização da amostra trabalhada
+A análise descritiva foi realizada com base em dados referentes aos estudantes do nono ano do ensino fundamental, como mencionado logo acima. Dentro da respectiva amostra, foram selecionados estudantes que realizaram a prova e responderam ao questionário. O conjunto de dados consiste em uma amostra final de aproximadamente 2000 alunos. 
+
+# Análise descritiva dos dados 
+## Questão 1
+
+### Item 43
+
+Representação gráfica da variável uso da biblioteca ou sala de leitura da escola.
+```{r item_43, echo=FALSE}
+#QuestÃ£o 1 - 
+#1) Represente graficamente a informação relativa aos itens 43 e 56. Comente.
+#primeiro vamos criar as variaveis das questÃµes 43 e 56:
+DF_9EF4 = DF_9EF3 #Data frame auxiliar
+DF_9EF4$TX_RESP_Q043 = factor(DF_9EF3$TX_RESP_Q043, labels = c("nenhuma hora","menos de 1h","de 1h a 2h","de 2h a 3h","mais de 3h"), levels = c("E","A","B","C","D"))
+
+library(ggplot2)
+
+ggplot(data = DF_9EF4)+geom_bar(mapping = aes(x = DF_9EF3$TX_RESP_Q043 , y=..count../sum(..count..) , fill=TX_RESP_Q043))+
+  labs(x= "Resposta da questão", y ="Percentagem de cada resposta",fill="",caption = "Questão: Em dias de aula, quanto tempo você gasta assistindo TV,
+navegando na internet ou jogando jogos eletrônicos?"  )+
+  ggtitle("Questão 43",)+
+  theme(plot.title = element_text(size=15, face="bold", 
+                                  margin = margin(10, 0, 10, 0),hjust=0.5), plot.caption = element_text(hjust=0))+
+  scale_y_continuous(breaks = seq(0,1,0.1),labels = scales::percent)
+
+
+```
+
+Pela análise do gráfico, é possível concluir diversas informações acerca do tempo gasto dos estudantes, em dias de aula, nas atividades especificadas.
+
+A vasta maioria, quase 35%, passa mais de 3 horas ao realizar as atividades de assistir a TV, navegar na internet ou ao jogar jogos eletrônicos. Uma minoria, perto do nível de 5% de estudantes, declarou não realizar as respectivas atividades em nenhuma hora. As demais categorias, oscilaram entre 15% e 25%.
+
+### Item 56
+
+Representação gráfica da variável tempo gasto assistindo a TV, navegando na internet ou jogando jogos eletrônicos, em dias de aula.
+
+
+```{r item_56, echo=FALSE}
+DF_9EF4$TX_RESP_Q056 = factor(DF_9EF3$TX_RESP_Q056, labels = c("sempre/quase sempre","As vezes","nunca/quase nunca","A escola não tem"), levels = c("A","B","C","D"))
+
+library(ggplot2)
+
+ggplot(data = DF_9EF4)+geom_bar(mapping = aes(x = DF_9EF3$TX_RESP_Q056 , y=..count../sum(..count..),  fill=TX_RESP_Q056))+
+  labs(x= "Resposta da questão", y ="Percentagem de cada resposta",fill="",caption = "questão : Você utiliza a biblioteca ou sala de leitura da sua escola?")+
+  ggtitle("Questão 56")+
+  theme(plot.title = element_text(size=15, face="bold", 
+                                  margin = margin(10, 0, 10, 0),hjust=0.5), plot.caption = element_text(hjust=0))+
+  scale_y_continuous(breaks = seq(0,1,0.15),labels = scales::percent)
+
+
+```
+
+
+Para a pergunta "Você utiliza a biblioteca ou sala de leitura da sua escola?", os maiores níveis percentuais foram dados pela categoria as vezes, com mais de 45%, seguida da categoria nunca/quase nunca, com aproximadamente 30% dos estudantes.
+
+Os alunos que declararam utilizar a biblioteca resultam em cerca de 15%, seguidos então da categoria A escola não tem, que carrega a menor porcentagem, menos que 7%.
+
+
+## Questão 2 
+
+Representação gráfica da variável número de eletrodomésticos nas casas.
+
+
+```{r q2, echo=FALSE}
+
+# 40,41,42,43,45,46 e 48 sÃo as colunas das questÃµes 5,6,7,8,10,11 e 13, respectivamente.
+for (Q in c(40,41,42,43,45,46,48)) { 
+  #vamos aproveitar a semelhança das questões para fazer um único codigo de fatorização
+  DF_9EF4[Q] = as.numeric(factor(DF_9EF3[,Q], c(0,1,2,3,4), levels = c("A","B","C","D","E")))
+  #IMPORTANTE SUJEITO A SER RETIRADO. CODIGO QUE FAZ [NA] VIRA 0:
+  DF_9EF4[Q][is.na(DF_9EF4[Q])] = 0
+  
+}
+# A nova variÃ¡vel Ã© definida entÃ£o como a soma de todas as colunas acima :
+DF_9EF4["num_de_eletrodomesticos"] = DF_9EF4[,40] + DF_9EF4[,41] + DF_9EF4[,42] + DF_9EF4[,43] + DF_9EF4[,45] + DF_9EF4[,46] + DF_9EF4[,48]
+
+ggplot(data = DF_9EF4, aes(x=num_de_eletrodomesticos)) + 
+  geom_bar(aes(y=..prop..), stat="count",fill="Blue") +
+  scale_y_continuous(limits=c(0,0.14),breaks = c(0,0.025,0.05,0.075,0.1,0.125),labels = scales::percent) +
+  scale_x_continuous(breaks = c(0,5,10,15,20,25,30))+
+  labs(x= "Número de eletrodomésticos", y ="Frequência percentual")
+
+
+
+```
+ 
+ Colocar aq o comentário pq o hist ficou bizarro quando rodou
+ 
+## Questão 3
+ Há associação entre o número de reprovações e o que o estudante pretende fazer depois do ensino médio?
+
+```{r q3, echo=FALSE}
+#Questão 3
+#3)Pode-se dizer que o número de reprovações (item 48) está associado ao que o estudante pretende fazer depois do ensino médio (item 57)? 
+#A relação é forte? Represente graficamente a distribuição conjunta dessas variáveis e comente.
+#(Observação: não inclua as não respostas nas tabelas e gráficos)
+
+DF_9EF4$TX_RESP_Q048 = factor(DF_9EF4$TX_RESP_Q048, c("Não","Sim, uma vez","Sim, duas vezes ou mais"), levels = c("A","B","C"))
+DF_9EF4$TX_RESP_Q057 = factor(DF_9EF4$TX_RESP_Q057, c("Somente continuar estudando","Somente trabalhar", "Continuar estudando e trabalhar","Ainda não sei"), levels = c("A","B","C","D"))
+
+
+DF_9EF4 = subset(DF_9EF4,is.na(DF_9EF4$TX_RESP_Q048) ==FALSE &  is.na(DF_9EF4$TX_RESP_Q057) ==FALSE )
+DF_9EF5 = subset(DF_9EF3,TX_RESP_Q048 != "" & TX_RESP_Q057 != "")
+
+table_Q48_e_Q57 = table(DF_9EF4$TX_RESP_Q048,DF_9EF4$TX_RESP_Q057,useNA = "no")
+per_table_Q48_e_Q57 = prop.table(table_Q48_e_Q57,1)
+
+library(ggplot2)
+ggplot(DF_9EF4, aes(x=DF_9EF5$TX_RESP_Q057, group=TX_RESP_Q048)) + 
+  geom_bar(aes(y=..prop..), stat="count",fill=c("red","blue","green","yellow","red","blue","green","yellow","red","blue","green","yellow"), position=position_dodge()) +
+  geom_text(aes(label=scales::percent(round(..prop..,2)), 
+                y=..prop..), stat="count", vjust=-.5, position=position_dodge(.9)) +
+  scale_y_continuous(limits=c(0,1),labels = scales::percent) +
+  labs(x= "Resposta da questão 57", y ="Frequência percentual",caption = " 
+       A: Somente continuar estudando;
+       B: Somente trabalhar;
+       C: Continuar estudando e trabalhar;
+       D: Ainda não sei.")+
+  ggtitle("Reprovação x perspectiva do futuro")+
+  theme(plot.title = element_text(size=15, face="bold", 
+                                  margin = margin(10, 0, 10, 0),hjust=0.5), plot.caption = element_text(hjust=0))+
+  facet_grid(~TX_RESP_Q048)
+```
+
+
+```{r q3_coef, echo=FALSE}
+#Vamos testar as hipoteses de que a reprovação influencia em seu o aluno quer continuar somente estudando, somente trabalhando, estudando e trabalhando ou ainda não sabe. Usaremos o teste do chi-quadrado de Pearson.
+library(forcats)
+teste_h = subset(DF_9EF3,TX_RESP_Q048 != "" & TX_RESP_Q057 != "")
+
+teste_h$TX_RESP_Q048 = factor(teste_h$TX_RESP_Q048,c("Não","Sim, uma vez","Sim, duas vezes ou mais"), levels = c("A","B","C"))
+
+# Preparando os dados para descobrir se tem relação com somente estudar
+teste_h1 = teste_h
+
+teste_h1$TX_RESP_Q057 = fct_collapse(teste_h1$TX_RESP_Q057,"Somente estudar"=c("A"),"Outros"= c("B","C","D"))
+
+h1 = table(teste_h1$TX_RESP_Q048,teste_h1$TX_RESP_Q057,useNA = "no")
+
+# Preparando os dados para descobrir se tem relação com somente trabalhar
+teste_h2 = teste_h
+
+teste_h2$TX_RESP_Q057 = fct_collapse(teste_h2$TX_RESP_Q057,"Somente trabalhar"=c("B"),"Outros"= c("A","C","D"))
+
+h2 = table(teste_h2$TX_RESP_Q048,teste_h2$TX_RESP_Q057,useNA = "no")
+
+# Preparando os dados para descobrir se tem relação com estudar e trabalhar
+teste_h3 = teste_h
+
+teste_h3$TX_RESP_Q057 = fct_collapse(teste_h3$TX_RESP_Q057,"Estudar e trabalhar"=c("C"),"Outros"= c("A","B","D"))
+
+h3 = table(teste_h3$TX_RESP_Q048,teste_h3$TX_RESP_Q057,useNA = "no")
+
+# Preparando os dados para descobrir se tem relação com não saber ainda
+teste_h4 = teste_h
+
+teste_h4$TX_RESP_Q057 = fct_collapse(teste_h4$TX_RESP_Q057,"Não sabe ainda"=c("D"),"Já sabe"= c("A","B","C"))
+
+h4 = table(teste_h4$TX_RESP_Q048,teste_h4$TX_RESP_Q057,useNA = "no")
+
+# calculando o chi-quadrado de cada um deles:
+
+x_quad_1 = chisq.test(h1)
+x_quad_2 = chisq.test(h2)
+x_quad_3 = chisq.test(h3)
+x_quad_4 = chisq.test(h4)
+
+# o coeficiente de contingencia é calculado como sendo raiz(t/(t-1)) * raiz(x^2/(x^2+n)). Onde:
+# t = grau de liberdade;
+# x^2 é o valor do chi-quadrado de pearson;
+# n Ã© o total de dados da amostra.
+
+C1 = (2)^0.5*(8.314329/(8.314329+sum(h1)))^0.5        # C entre 0 e 0,3 - fraca;
+C2 = (2)^0.5*(3.724418 /(3.724418 +sum(h2)))^0.5      # C entre 0,3 e 0,7 - moderada ;
+C3 = (2)^0.5*(1.203616  /(1.203616  +sum(h3)))^0.5    # C entre 0,7 e 1 - forte.
+C4 = (2)^0.5*(7.767537  /(7.767537  +sum(h4)))^0.5    # Todas os valores aqui deram abaixo de 0,1.
+
+tabela_total <- cbind(C1,C2,C3,C4)
+colnames(tabela_total)<- c("somente estudar","somente trabalhar","estudar e trabalhar","não sabe ainda")
+row.names(tabela_total)<- c("Coeficiente de contingência")
+
+#Pela a analise dos graficos Ã© possivel deduzir que existe uma correlaÃ§Ã£o entre o quanto um aluno tende a querer continuar somente estudando 
+# e o nÃºmero de reprovaÃ§Ãµes. AlÃ©m de ter uma relaÃ§Ã£o entre reprovaÃ§Ãµes e incertezas do futuro. Os resultados do teste do chi quadrado reforÃ§a essas 
+#ideais. Mas ao analisar os valores do coeficiente de contingencia notamos que essa correlaÃ§Ã£o Ã© fraca, ou seja, menor que 0,1.
+
+```
+
+Ao observar a disposição dos gráficos, é possível concluir que aparentemente parece existir uma correlação entre o quanto um aluno tende a querer de continuar somente estudando e o número de reprovações. 
+
+Para verificar a existência ou não, dessa correlação, é utilizado o coeficiente de contingência que varia entre 0 e 1. Quanto mais próximo de 1, mais correlacionadas se encontram as variáveis, enquanto que quanto mais próximo de zero, uma menor associação se faz presente entre elas. 
+
+A tabela abaixo corresponde aos respectivos valores obtidos do coeficiente de conttigência para as variáveis anteriormente representadas graficamente. 
+
+
+somente estudar | somente trabalhar | estudar e trabalhar | não sabe ainda
+:------------- | :-----------: | :----------: | ----------:
+0.0926225 | 0.06206502 | 0.03530571 | 0.08953768
+
+Ao analisar os respectivos coeficientes de contigência, vê-se que a correlação entre as variáveis é bem baixa, já que todos os valores se encontram próximos de 0.
+
+## Questão 4
+
+Representação gráfica da proficiência em Língua Portuguesa dos estudantes da amostra. 
+
+```{r q4, echo=FALSE}
+#Questão 4
+# 4) Represente graficamente a proficiência em Língua Portuguesa dos estudantes da amostra e calcule algumas medidas resumo. Comente os resultados.
+
+DF_9EF4$PROFICIENCIA_LP_SAEB1 <- cut(DF_9EF4$PROFICIENCIA_LP_SAEB, breaks=c(0,200,225,250,275,300,325,350,375), 
+                                     labels=c("Nível 1", "Nível 2","Nível 3", "Nível 4","Nível 5","Nível 6","Nível 7", "Nível 8"),
+                                     right=FALSE)
+
+DF_9EF4$PROFICIENCIA_LP_SAEB2 <- cut(DF_9EF4$PROFICIENCIA_LP_SAEB, breaks=c(0,200,225,250,275,300,325,350,375), 
+                                     labels=c(">=200 a 225", "225 a 250","250 a 275", "275 a 300","300 a 325","325 a 350","350 a 375", ">=375"),
+                                     right=FALSE)
+
+
+ggplot(data = DF_9EF4)+geom_bar(mapping = aes(x = PROFICIENCIA_LP_SAEB1 , y=..count../sum(..count..),  fill=PROFICIENCIA_LP_SAEB2))+
+  labs(x= "Desempenho", y ="Percentagem de cada resposta",fill="",caption = " Represente graficamente a proficiência em Língua Portuguesa dos estudantes")+
+  ggtitle("Proficiência em LP")+
+  theme(plot.title = element_text(size=12, face="bold", 
+                                  margin = margin(20, 0, 20, 0),hjust=0.5), plot.caption = element_text(hjust=0))+
+  scale_y_continuous(breaks = seq(0,1,0.05),labels = scales::percent)
+
+summary(DF_9EF4$PROFICIENCIA_LP_SAEB)
+summary(DF_9EF4$PROFICIENCIA_LP_SAEB2)
+
+
+
+# COMENTÁRIO: 
+
+```
+
+Foram criados dois datasets a partir do PROFICIENCIA_LP_SAEB onde um classifica as notas pelo nível e o outro mostra o intervalo de notas. 
+A partir disso é possível inferir que a maioria dos alunos tiraram notas menores, entre 200 e 350, e poucos conseguiram uma proficiência acima de 375. 
+Quanto as medidas resumo, a média de notas em Língua Portuguesa é de 247,5. Esse valor se enquadra no nível 2 de proficiência, o que é uma categoria baixa visto que existem 8 níveis de proficiência. 
